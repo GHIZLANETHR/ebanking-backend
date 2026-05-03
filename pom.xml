@@ -41,12 +41,12 @@
         </dependency>
 
         <!-- H2 DATABASE (FIX IMPORTANT) -->
-        <dependency>
+        <!-- <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
-
+-->
         <!-- MYSQL (si tu veux switch plus tard) -->
         <dependency>
             <groupId>com.mysql</groupId>
@@ -79,6 +79,11 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version> 8.0.28</version>
         </dependency>
 
     </dependencies>
