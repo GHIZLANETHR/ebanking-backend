@@ -9,6 +9,8 @@ import org.example.ebankingbackend.enums.AccountStatus;
 import org.example.ebankingbackend.enums.OperationType;
 import org.example.ebankingbackend.exceptions.CustomerNotFoundException;
 import org.example.ebankingbackend.repositories.AccountOperationRepository;
+import org.example.ebankingbackend.repositories.AppRoleRepository;
+import org.example.ebankingbackend.repositories.AppUserRepository;
 import org.example.ebankingbackend.repositories.BankAccountRepository;
 import org.example.ebankingbackend.repositories.CustomerRepository;
 import org.example.ebankingbackend.services.BankAccountService;
@@ -16,6 +18,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Date;
 import java.util.List;
@@ -27,6 +30,41 @@ public class EbankingBackendApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(EbankingBackendApplication.class, args);
+    }
+
+    @Bean
+    CommandLineRunner initUsers(AppUserRepository userRepository,
+                                AppRoleRepository roleRepository,
+                                PasswordEncoder passwordEncoder) {
+        return args -> {
+            // Créer les rôles
+            AppRole roleUser = new AppRole();
+            roleUser.setRoleName("USER");
+            roleRepository.save(roleUser);
+
+            AppRole roleAdmin = new AppRole();
+            roleAdmin.setRoleName("ADMIN");
+            roleRepository.save(roleAdmin);
+
+            // Créer user1 avec rôle USER
+            AppUser user1 = new AppUser();
+            user1.setUsername("user1");
+            user1.setPassword(passwordEncoder.encode("12345"));
+            user1.setEmail("user1@gmail.com");
+            user1.getRoles().add(roleUser);
+            userRepository.save(user1);
+
+            // Créer admin avec rôles USER + ADMIN
+            AppUser admin = new AppUser();
+            admin.setUsername("admin");
+            admin.setPassword(passwordEncoder.encode("12345"));
+            admin.setEmail("admin@gmail.com");
+            admin.getRoles().add(roleUser);
+            admin.getRoles().add(roleAdmin);
+            userRepository.save(admin);
+
+            System.out.println("✅ Users initialisés : user1 / admin");
+        };
     }
 
     @Bean
