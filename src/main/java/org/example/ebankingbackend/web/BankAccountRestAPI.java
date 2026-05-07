@@ -1,6 +1,7 @@
 package org.example.ebankingbackend.web;
 
 import org.example.ebankingbackend.dtos.*;
+import org.example.ebankingbackend.enums.AccountStatus;
 import org.example.ebankingbackend.exceptions.BalanceNotSufficientException;
 import org.example.ebankingbackend.exceptions.BankAccountNotFoundException;
 import org.example.ebankingbackend.services.BankAccountService;
@@ -12,6 +13,7 @@ import java.util.List;
 @RestController
 @CrossOrigin("*")
 public class BankAccountRestAPI {
+
     private BankAccountService bankAccountService;
 
     public BankAccountRestAPI(BankAccountService bankAccountService) {
@@ -48,23 +50,40 @@ public class BankAccountRestAPI {
     @PostMapping("/accounts/debit")
     @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
     public DebitDTO debit(@RequestBody DebitDTO debitDTO) throws BankAccountNotFoundException, BalanceNotSufficientException {
-        this.bankAccountService.debit(debitDTO.getAccountId(), debitDTO.getAmount(), debitDTO.getDescription());
+        bankAccountService.debit(debitDTO.getAccountId(), debitDTO.getAmount(), debitDTO.getDescription());
         return debitDTO;
     }
 
     @PostMapping("/accounts/credit")
     @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
     public CreditDTO credit(@RequestBody CreditDTO creditDTO) throws BankAccountNotFoundException {
-        this.bankAccountService.credit(creditDTO.getAccountId(), creditDTO.getAmount(), creditDTO.getDescription());
+        bankAccountService.credit(creditDTO.getAccountId(), creditDTO.getAmount(), creditDTO.getDescription());
         return creditDTO;
     }
 
     @PostMapping("/accounts/transfer")
     @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
     public void transfer(@RequestBody TransferRequestDTO transferRequestDTO) throws BankAccountNotFoundException, BalanceNotSufficientException {
-        this.bankAccountService.transfer(
+        bankAccountService.transfer(
                 transferRequestDTO.getAccountSource(),
                 transferRequestDTO.getAccountDestination(),
                 transferRequestDTO.getAmount());
+    }
+
+    // ========== NOUVEAUX ENDPOINTS POUR L'ADMINISTRATION DES COMPTES ==========
+
+    @DeleteMapping("/accounts/{accountId}")
+    @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
+    public void deleteAccount(@PathVariable String accountId) throws BankAccountNotFoundException {
+        bankAccountService.deleteAccount(accountId);
+    }
+
+    @GetMapping("/accounts/search")
+    @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
+    public List<BankAccountDTO> searchAccounts(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) AccountStatus status) {
+        return bankAccountService.searchAccounts(keyword, type, status);
     }
 }

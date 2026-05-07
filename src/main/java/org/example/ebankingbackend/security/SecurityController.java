@@ -1,10 +1,16 @@
 package org.example.ebankingbackend.security;
 
+import org.example.ebankingbackend.dtos.PasswordChangeRequestDTO;
+import org.example.ebankingbackend.entities.AppUser;
+import org.example.ebankingbackend.repositories.AppUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -25,6 +31,10 @@ public class SecurityController {
     private AuthenticationManager authenticationManager;
     @Autowired
     private JwtEncoder jwtEncoder;
+    @Autowired
+    private AppUserRepository appUserRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @GetMapping("/profile")
     public Authentication authentication(Authentication authentication) {
@@ -33,7 +43,7 @@ public class SecurityController {
 
     @PostMapping("/login")
     public Map<String, String> login(
-            @RequestParam String username,   // ← @RequestParam ajouté
+            @RequestParam String username,
             @RequestParam String password) {
 
         Authentication authentication = authenticationManager.authenticate(
@@ -61,5 +71,29 @@ public class SecurityController {
 
         String jwt = jwtEncoder.encode(jwtEncoderParameters).getTokenValue();
         return Map.of("access-token", jwt);
+    }
+
+    @PostMapping("/change-password")
+    public Map<String, String> changePassword(
+            @RequestBody PasswordChangeRequestDTO request,
+            @AuthenticationPrincipal UserDetails currentUser) {
+
+        if (currentUser == null) {
+            throw new RuntimeException("Utilisateur non authentifié");
+        }
+
+        AppUser user = appUserRepository.findByUsername(currentUser.getUsername());
+        if (user == null) {
+            throw new RuntimeException("Utilisateur introuvable");
+        }
+
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new RuntimeException("Ancien mot de passe incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        appUserRepository.save(user);
+
+        return Map.of("message", "Mot de passe changé avec succès");
     }
 }

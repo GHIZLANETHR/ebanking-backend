@@ -8,7 +8,7 @@ import jakarta.persistence.*;
 import java.util.List;
 @Entity
 @Data @NoArgsConstructor @AllArgsConstructor
-public class Customer {
+public class Customer extends BaseEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
